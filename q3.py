@@ -1,12 +1,10 @@
 import math
 import random
 
-# ============================================================
 # FUNÇÕES BASE
-# ============================================================
 
 def contar_conflitos(estado):
-    """Conta o número de pares de rainhas em conflito."""
+    # Conta o número de pares de rainhas em conflito.
     n = len(estado)
     conflitos = 0
     for i in range(n):
@@ -21,10 +19,9 @@ def contar_conflitos(estado):
 
 
 def obter_vizinhos(estado):
-    """
-    Gera todos os vizinhos movendo exatamente UMA rainha
-    para outra linha da MESMA coluna.
-    """
+    # Gera todos os vizinhos movendo exatamente UMA rainha
+    # para outra linha da MESMA coluna.
+
     n = len(estado)
     vizinhos = []
     for coluna in range(n):
@@ -36,15 +33,12 @@ def obter_vizinhos(estado):
     return vizinhos
 
 
-# ============================================================
 # HILL-CLIMBING (execução manual detalhada)
-# ============================================================
 
 def hill_climbing_detalhado(estado_inicial, max_iteracoes=1000):
-    """
-    Hill-Climbing com registro detalhado de cada iteração.
-    Retorna: histórico de iterações, resultado, tipo de parada.
-    """
+    # Hill-Climbing com registro detalhado de cada iteração.
+    # Retorna: histórico de iterações, resultado, tipo de parada.
+    
     atual = tuple(estado_inicial)
     atual_h = contar_conflitos(atual)
     historico = []  # lista de dicts
@@ -74,7 +68,7 @@ def hill_climbing_detalhado(estado_inicial, max_iteracoes=1000):
             break
 
         if melhor_h >= atual_h:
-            motivo_parada = "local_max_or_plateau"
+            motivo_parada = "local_max_or_plato"
             break
 
         atual = best_vizinho
@@ -85,25 +79,23 @@ def hill_climbing_detalhado(estado_inicial, max_iteracoes=1000):
         pass  # já registrado
     else:
         # Verifica se foi platô ou máximo local
-        if motivo_parada == "local_max_or_plateau":
+        if motivo_parada == "local_max_or_plato":
             vizinhos = obter_vizinhos(atual)
             avaliados = [(n, contar_conflitos(n)) for n in vizinhos]
             avaliados.sort(key=lambda x: x[1])
             melhor_h = avaliados[0][1]
             if melhor_h == atual_h:
-                motivo_parada = "plateau"
+                motivo_parada = "plato"
             else:
-                motivo_parada = "local_maximum"
+                motivo_parada = "maximo_local"
 
     return historico, atual, atual_h, motivo_parada
 
 
-# ============================================================
 # RANDOM RESTART HILL-CLIMBING
-# ============================================================
 
 def hill_climbing_simples(estado, max_iteracoes=1000):
-    """Versão simples do HC para uso no Random Restart."""
+    # Versão simples do HC para uso no Random Restart.
     atual = tuple(estado)
     atual_h = contar_conflitos(atual)
     passos = 0
@@ -125,7 +117,7 @@ def hill_climbing_simples(estado, max_iteracoes=1000):
 
 
 def hill_climbing_reinicio_aleatorio(num_reinicios=20, n=8, semente=42):
-    """Executa HC com reinício aleatório."""
+    # Executa HC com reinício aleatório.
     random.seed(semente)
     resultados = []
 
@@ -144,16 +136,13 @@ def hill_climbing_reinicio_aleatorio(num_reinicios=20, n=8, semente=42):
     return resultados
 
 
-# ============================================================
 # SIMULATED ANNEALING
-# ============================================================
 
 def recozimento_simulado(estado_inicial, T0=100.0, alpha=0.95, max_iteracoes=10000, semente=42):
-    """
-    Simulated Annealing para N-Rainhas.
-    T0: temperatura inicial
-    alpha: fator de resfriamento (T = alpha * T)
-    """
+    # Simulated Annealing para N-Rainhas.
+    # T0: temperatura inicial
+    # alpha: fator de resfriamento (T = alpha * T)
+    
     random.seed(semente)
     atual = tuple(estado_inicial)
     atual_h = contar_conflitos(atual)
@@ -209,7 +198,7 @@ def recozimento_simulado(estado_inicial, T0=100.0, alpha=0.95, max_iteracoes=100
 
 
 def executar_rs_multiplas(num_execucoes=20, n=8, T0=100.0, alpha=0.95, max_iteracoes=10000):
-    """Executa SA múltiplas vezes para comparação."""
+    # Executa SA múltiplas vezes para comparação.
     resultados = []
     for execucao in range(num_execucoes):
         inicial = tuple(random.randint(1, n) for _ in range(n))
@@ -225,9 +214,7 @@ def executar_rs_multiplas(num_execucoes=20, n=8, T0=100.0, alpha=0.95, max_itera
     return resultados
 
 
-# ============================================================
 # IMPRESSÃO DOS RESULTADOS
-# ============================================================
 
 def imprimir_separador(caractere="=", largura=80):
     print(caractere * largura)
@@ -276,11 +263,11 @@ def imprimir_hill_climbing_manual():
     print(f"  Total de iterações: {len(historico)}")
     print(f"  Motivo de parada: {motivo_parada}")
 
-    if motivo_parada == "local_maximum":
+    if motivo_parada == "maximo_local":
         print("\n  *** MÁXIMO LOCAL DETECTADO ***")
         print("  Nenhum vizinho tem h menor que o estado atual.")
         print("  A busca ficou presa; não é solução global.")
-    elif motivo_parada == "plateau":
+    elif motivo_parada == "plato":
         print("\n  *** PLATÔ DETECTADO ***")
         print("  Os melhores vizinhos têm h igual ao estado atual.")
     elif motivo_parada == "solution":
@@ -377,11 +364,6 @@ def imprimir_comparacao():
     print(f"{'Escapa máximos locais':<35} {'Não (reinício)':<22} {'Sim (prob.)'}")
     print(f"{'Sensível ao estado inicial':<35} {'Muito':<22} {'Moderado'}")
     print(f"{'Estabilidade':<35} {'Moderada':<22} {'Variável (T)'}")
-
-
-# ============================================================
-# MAIN
-# ============================================================
 
 if __name__ == "__main__":
     imprimir_hill_climbing_manual()
