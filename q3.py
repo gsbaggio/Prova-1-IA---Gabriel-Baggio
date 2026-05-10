@@ -5,375 +5,375 @@ import random
 # FUNÇÕES BASE
 # ============================================================
 
-def count_conflicts(state):
+def contar_conflitos(estado):
     """Conta o número de pares de rainhas em conflito."""
-    n = len(state)
-    conflicts = 0
+    n = len(estado)
+    conflitos = 0
     for i in range(n):
         for j in range(i + 1, n):
             # Mesma linha
-            if state[i] == state[j]:
-                conflicts += 1
+            if estado[i] == estado[j]:
+                conflitos += 1
             # Mesma diagonal
-            elif abs(state[i] - state[j]) == abs(i - j):
-                conflicts += 1
-    return conflicts
+            elif abs(estado[i] - estado[j]) == abs(i - j):
+                conflitos += 1
+    return conflitos
 
 
-def get_neighbors(state):
+def obter_vizinhos(estado):
     """
     Gera todos os vizinhos movendo exatamente UMA rainha
     para outra linha da MESMA coluna.
     """
-    n = len(state)
-    neighbors = []
-    for col in range(n):
-        for row in range(1, n + 1):
-            if row != state[col]:
-                neighbor = list(state)
-                neighbor[col] = row
-                neighbors.append(tuple(neighbor))
-    return neighbors
+    n = len(estado)
+    vizinhos = []
+    for coluna in range(n):
+        for linha in range(1, n + 1):
+            if linha != estado[coluna]:
+                vizinho = list(estado)
+                vizinho[coluna] = linha
+                vizinhos.append(tuple(vizinho))
+    return vizinhos
 
 
 # ============================================================
 # HILL-CLIMBING (execução manual detalhada)
 # ============================================================
 
-def hill_climbing_detailed(initial_state, max_iter=1000):
+def hill_climbing_detalhado(estado_inicial, max_iteracoes=1000):
     """
     Hill-Climbing com registro detalhado de cada iteração.
     Retorna: histórico de iterações, resultado, tipo de parada.
     """
-    current = tuple(initial_state)
-    current_h = count_conflicts(current)
-    history = []  # lista de dicts
-    stop_reason = "max_iter"
+    atual = tuple(estado_inicial)
+    atual_h = contar_conflitos(atual)
+    historico = []  # lista de dicts
+    motivo_parada = "max_iteracoes"
 
-    for iteration in range(max_iter):
-        neighbors = get_neighbors(current)
+    for iteracao in range(max_iteracoes):
+        vizinhos = obter_vizinhos(atual)
         # Avalia todos os vizinhos
-        evaluated = [(n, count_conflicts(n)) for n in neighbors]
+        avaliados = [(n, contar_conflitos(n)) for n in vizinhos]
         # Ordena por h crescente
-        evaluated.sort(key=lambda x: x[1])
+        avaliados.sort(key=lambda x: x[1])
 
-        best_neighbor, best_h = evaluated[0]
+        best_vizinho, melhor_h = avaliados[0]
 
         # Registra iteração
-        history.append({
-            "iteration": iteration,
-            "state": current,
-            "h": current_h,
-            "top5_neighbors": evaluated[:5],
-            "best_neighbor": best_neighbor,
-            "best_h": best_h,
+        historico.append({
+            "iteracao": iteracao,
+            "estado": atual,
+            "h": atual_h,
+            "top5_vizinhos": avaliados[:5],
+            "best_vizinho": best_vizinho,
+            "melhor_h": melhor_h,
         })
 
-        if current_h == 0:
-            stop_reason = "solution"
+        if atual_h == 0:
+            motivo_parada = "solution"
             break
 
-        if best_h >= current_h:
-            stop_reason = "local_max_or_plateau"
+        if melhor_h >= atual_h:
+            motivo_parada = "local_max_or_plateau"
             break
 
-        current = best_neighbor
-        current_h = best_h
+        atual = best_vizinho
+        atual_h = melhor_h
 
     # Adiciona estado final
-    if stop_reason == "solution":
+    if motivo_parada == "solution":
         pass  # já registrado
     else:
         # Verifica se foi platô ou máximo local
-        if stop_reason == "local_max_or_plateau":
-            neighbors = get_neighbors(current)
-            evaluated = [(n, count_conflicts(n)) for n in neighbors]
-            evaluated.sort(key=lambda x: x[1])
-            best_h = evaluated[0][1]
-            if best_h == current_h:
-                stop_reason = "plateau"
+        if motivo_parada == "local_max_or_plateau":
+            vizinhos = obter_vizinhos(atual)
+            avaliados = [(n, contar_conflitos(n)) for n in vizinhos]
+            avaliados.sort(key=lambda x: x[1])
+            melhor_h = avaliados[0][1]
+            if melhor_h == atual_h:
+                motivo_parada = "plateau"
             else:
-                stop_reason = "local_maximum"
+                motivo_parada = "local_maximum"
 
-    return history, current, current_h, stop_reason
+    return historico, atual, atual_h, motivo_parada
 
 
 # ============================================================
 # RANDOM RESTART HILL-CLIMBING
 # ============================================================
 
-def hill_climbing_simple(state, max_iter=1000):
+def hill_climbing_simples(estado, max_iteracoes=1000):
     """Versão simples do HC para uso no Random Restart."""
-    current = tuple(state)
-    current_h = count_conflicts(current)
-    steps = 0
+    atual = tuple(estado)
+    atual_h = contar_conflitos(atual)
+    passos = 0
 
-    for _ in range(max_iter):
-        if current_h == 0:
+    for _ in range(max_iteracoes):
+        if atual_h == 0:
             break
-        neighbors = get_neighbors(current)
-        evaluated = [(n, count_conflicts(n)) for n in neighbors]
-        evaluated.sort(key=lambda x: x[1])
-        best_neighbor, best_h = evaluated[0]
-        if best_h >= current_h:
+        vizinhos = obter_vizinhos(atual)
+        avaliados = [(n, contar_conflitos(n)) for n in vizinhos]
+        avaliados.sort(key=lambda x: x[1])
+        best_vizinho, melhor_h = avaliados[0]
+        if melhor_h >= atual_h:
             break
-        current = best_neighbor
-        current_h = best_h
-        steps += 1
+        atual = best_vizinho
+        atual_h = melhor_h
+        passos += 1
 
-    return current, current_h, steps
+    return atual, atual_h, passos
 
 
-def random_restart_hill_climbing(num_restarts=20, n=8, seed=42):
+def hill_climbing_reinicio_aleatorio(num_reinicios=20, n=8, semente=42):
     """Executa HC com reinício aleatório."""
-    random.seed(seed)
-    results = []
+    random.seed(semente)
+    resultados = []
 
-    for run in range(1, num_restarts + 1):
-        initial = tuple(random.randint(1, n) for _ in range(n))
-        final_state, final_h, steps = hill_climbing_simple(initial)
-        found = (final_h == 0)
-        results.append({
-            "run": run,
-            "initial": initial,
-            "steps": steps,
-            "final_h": final_h,
-            "found": found,
+    for execucao in range(1, num_reinicios + 1):
+        inicial = tuple(random.randint(1, n) for _ in range(n))
+        final_estado, h_final, passos = hill_climbing_simples(inicial)
+        encontrado = (h_final == 0)
+        resultados.append({
+            "execucao": execucao,
+            "inicial": inicial,
+            "passos": passos,
+            "h_final": h_final,
+            "encontrado": encontrado,
         })
 
-    return results
+    return resultados
 
 
 # ============================================================
 # SIMULATED ANNEALING
 # ============================================================
 
-def simulated_annealing(initial_state, T0=100.0, alpha=0.95, max_iter=10000, seed=42):
+def recozimento_simulado(estado_inicial, T0=100.0, alpha=0.95, max_iteracoes=10000, semente=42):
     """
     Simulated Annealing para N-Rainhas.
     T0: temperatura inicial
     alpha: fator de resfriamento (T = alpha * T)
     """
-    random.seed(seed)
-    current = tuple(initial_state)
-    current_h = count_conflicts(current)
+    random.seed(semente)
+    atual = tuple(estado_inicial)
+    atual_h = contar_conflitos(atual)
     T = T0
-    steps = 0
-    worse_accepted = []  # exemplos de movimentos piores aceitos
+    passos = 0
+    piores_aceitos = []  # exemplos de movimentos piores aceitos
 
-    for i in range(max_iter):
-        if current_h == 0:
+    for i in range(max_iteracoes):
+        if atual_h == 0:
             break
         if T < 1e-10:
             break
 
         # Escolhe vizinho aleatório
-        n = len(current)
-        col = random.randint(0, n - 1)
-        row = random.randint(1, n)
-        while row == current[col]:
-            row = random.randint(1, n)
+        n = len(atual)
+        coluna = random.randint(0, n - 1)
+        linha = random.randint(1, n)
+        while linha == atual[coluna]:
+            linha = random.randint(1, n)
 
-        neighbor = list(current)
-        neighbor[col] = row
-        neighbor = tuple(neighbor)
-        neighbor_h = count_conflicts(neighbor)
+        vizinho = list(atual)
+        vizinho[coluna] = linha
+        vizinho = tuple(vizinho)
+        vizinho_h = contar_conflitos(vizinho)
 
-        delta_E = neighbor_h - current_h  # aumento de conflitos
+        delta_E = vizinho_h - atual_h  # aumento de conflitos
 
         if delta_E < 0:
             # Melhora: aceita sempre
-            current = neighbor
-            current_h = neighbor_h
+            atual = vizinho
+            atual_h = vizinho_h
         else:
             # Piora ou igual: aceita com probabilidade e^(-deltaE/T)
             P = math.exp(-delta_E / T)
             if random.random() < P:
-                if len(worse_accepted) < 5:
-                    worse_accepted.append({
-                        "step": i,
-                        "from_h": current_h,
-                        "to_h": neighbor_h,
+                if len(piores_aceitos) < 5:
+                    piores_aceitos.append({
+                        "passo": i,
+                        "de_h": atual_h,
+                        "para_h": vizinho_h,
                         "delta_E": delta_E,
                         "T": round(T, 4),
                         "P": round(P, 4),
                     })
-                current = neighbor
-                current_h = neighbor_h
+                atual = vizinho
+                atual_h = vizinho_h
 
         # Resfriamento
         T = alpha * T
-        steps += 1
+        passos += 1
 
-    return current, current_h, steps, worse_accepted
+    return atual, atual_h, passos, piores_aceitos
 
 
-def run_sa_multiple(num_runs=20, n=8, T0=100.0, alpha=0.95, max_iter=10000):
+def executar_rs_multiplas(num_execucoes=20, n=8, T0=100.0, alpha=0.95, max_iteracoes=10000):
     """Executa SA múltiplas vezes para comparação."""
-    results = []
-    for run in range(num_runs):
-        initial = tuple(random.randint(1, n) for _ in range(n))
-        final_state, final_h, steps, _ = simulated_annealing(
-            initial, T0=T0, alpha=alpha, max_iter=max_iter, seed=run
+    resultados = []
+    for execucao in range(num_execucoes):
+        inicial = tuple(random.randint(1, n) for _ in range(n))
+        final_estado, h_final, passos, _ = recozimento_simulado(
+            inicial, T0=T0, alpha=alpha, max_iteracoes=max_iteracoes, semente=execucao
         )
-        results.append({
-            "run": run + 1,
-            "final_h": final_h,
-            "found": (final_h == 0),
-            "steps": steps,
+        resultados.append({
+            "run": execucao + 1,
+            "h_final": h_final,
+            "encontrado": (h_final == 0),
+            "passos": passos,
         })
-    return results
+    return resultados
 
 
 # ============================================================
 # IMPRESSÃO DOS RESULTADOS
 # ============================================================
 
-def print_separator(char="=", width=80):
-    print(char * width)
+def imprimir_separador(caractere="=", largura=80):
+    print(caractere * largura)
 
 
-def print_hill_climbing_manual():
-    print_separator()
+def imprimir_hill_climbing_manual():
+    imprimir_separador()
     print("HILL-CLIMBING MANUAL A PARTIR DE [1,1,1,1,1,1,1,1]")
-    print_separator()
+    imprimir_separador()
 
-    initial = [1, 1, 1, 1, 1, 1, 1, 1]
-    history, final_state, final_h, stop_reason = hill_climbing_detailed(initial)
+    inicial = [1, 1, 1, 1, 1, 1, 1, 1]
+    historico, final_estado, h_final, motivo_parada = hill_climbing_detalhado(inicial)
 
-    print(f"\nEstado inicial: {list(initial)}, h = {count_conflicts(initial)}\n")
+    print(f"\nEstado inicial: {list(inicial)}, h = {contar_conflitos(inicial)}\n")
 
     # Tabela resumo
     print("TABELA RESUMO DE ITERAÇÕES")
     print(f"{'Iteração':<10} {'Estado':<35} {'h(s)':<6}")
     print("-" * 55)
-    for entry in history:
-        print(f"{entry['iteration']:<10} {str(list(entry['state'])):<35} {entry['h']:<6}")
+    for entrada in historico:
+        print(f"{entrada['iteracao']:<10} {str(list(entrada['estado'])):<35} {entrada['h']:<6}")
 
     # Detalhe de cada iteração
     print("\n\nDETALHE DE CADA ITERAÇÃO (Top 5 vizinhos)")
-    print_separator("-")
-    for entry in history:
-        it = entry["iteration"]
+    imprimir_separador("-")
+    for entrada in historico:
+        it = entrada["iteracao"]
         print(f"\n--- Iteração {it} ---")
-        print(f"  Estado atual: {list(entry['state'])}, h = {entry['h']}")
+        print(f"  Estado atual: {list(entrada['estado'])}, h = {entrada['h']}")
         print(f"  Top 5 vizinhos:")
         print(f"  {'Vizinho':<40} {'h':<5}")
-        for nb, nb_h in entry["top5_neighbors"]:
-            marker = " <-- ESCOLHIDO" if nb == entry["best_neighbor"] else ""
-            print(f"  {str(list(nb)):<40} {nb_h:<5}{marker}")
-        print(f"  Escolhido: {list(entry['best_neighbor'])}, h = {entry['best_h']}")
-        if entry['best_h'] < entry['h']:
-            print(f"  Motivo: melhor vizinho com h = {entry['best_h']} < {entry['h']} (melhora)")
-        elif entry['best_h'] == entry['h']:
+        for viz, viz_h in entrada["top5_vizinhos"]:
+            marcador = " <-- ESCOLHIDO" if viz == entrada["best_vizinho"] else ""
+            print(f"  {str(list(viz)):<40} {viz_h:<5}{marcador}")
+        print(f"  Escolhido: {list(entrada['best_vizinho'])}, h = {entrada['melhor_h']}")
+        if entrada['melhor_h'] < entrada['h']:
+            print(f"  Motivo: melhor vizinho com h = {entrada['melhor_h']} < {entrada['h']} (melhora)")
+        elif entrada['melhor_h'] == entrada['h']:
             print(f"  Motivo: platô (melhor vizinho tem h igual ao atual)")
         else:
-            print(f"  Motivo: máximo local (todos vizinhos têm h >= {entry['h']})")
+            print(f"  Motivo: máximo local (todos vizinhos têm h >= {entrada['h']})")
 
     print(f"\n\nRESULTADO FINAL")
-    print_separator("-")
-    print(f"  Estado final: {list(final_state)}, h = {final_h}")
-    print(f"  Total de iterações: {len(history)}")
-    print(f"  Motivo de parada: {stop_reason}")
+    imprimir_separador("-")
+    print(f"  Estado final: {list(final_estado)}, h = {h_final}")
+    print(f"  Total de iterações: {len(historico)}")
+    print(f"  Motivo de parada: {motivo_parada}")
 
-    if stop_reason == "local_maximum":
+    if motivo_parada == "local_maximum":
         print("\n  *** MÁXIMO LOCAL DETECTADO ***")
         print("  Nenhum vizinho tem h menor que o estado atual.")
         print("  A busca ficou presa; não é solução global.")
-    elif stop_reason == "plateau":
+    elif motivo_parada == "plateau":
         print("\n  *** PLATÔ DETECTADO ***")
         print("  Os melhores vizinhos têm h igual ao estado atual.")
-    elif stop_reason == "solution":
+    elif motivo_parada == "solution":
         print("\n  *** SOLUÇÃO GLOBAL ENCONTRADA (h = 0) ***")
 
 
-def print_random_restart():
-    print_separator()
+def imprimir_reinicio_aleatorio():
+    imprimir_separador()
     print("RANDOM RESTART HILL-CLIMBING (20 execuções)")
-    print_separator()
+    imprimir_separador()
 
-    results = random_restart_hill_climbing(num_restarts=20)
+    resultados = hill_climbing_reinicio_aleatorio(num_reinicios=20)
 
     print(f"\n{'Execução':<10} {'Estado inicial':<38} {'Passos':<8} {'h(s) final':<12} {'Solução?'}")
     print("-" * 80)
-    solutions = 0
-    for r in results:
-        found_str = "SIM" if r["found"] else "NÃO"
-        if r["found"]:
-            solutions += 1
-        print(f"{r['run']:<10} {str(list(r['initial'])):<38} {r['steps']:<8} {r['final_h']:<12} {found_str}")
+    solucoes = 0
+    for r in resultados:
+        encontrado_str = "SIM" if r["encontrado"] else "NÃO"
+        if r["encontrado"]:
+            solucoes += 1
+        print(f"{r['execucao']:<10} {str(list(r['inicial'])):<38} {r['passos']:<8} {r['h_final']:<12} {encontrado_str}")
 
-    print(f"\nTotal de soluções encontradas: {solutions}/{len(results)}")
-    avg_steps = sum(r["steps"] for r in results) / len(results)
-    print(f"Média de passos: {avg_steps:.1f}")
+    print(f"\nTotal de soluções encontradas: {solucoes}/{len(resultados)}")
+    avg_passos = sum(r["passos"] for r in resultados) / len(resultados)
+    print(f"Média de passos: {avg_passos:.1f}")
 
 
-def print_simulated_annealing():
-    print_separator()
+def print_recozimento_simulado():
+    imprimir_separador()
     print("SIMULATED ANNEALING")
-    print_separator()
+    imprimir_separador()
 
     T0 = 100.0
     alpha = 0.95
-    max_iter = 10000
-    initial = [1, 1, 1, 1, 1, 1, 1, 1]
+    max_iteracoes = 10000
+    inicial = [1, 1, 1, 1, 1, 1, 1, 1]
 
-    final_state, final_h, steps, worse_accepted = simulated_annealing(
-        initial, T0=T0, alpha=alpha, max_iter=max_iter
+    final_estado, h_final, passos, piores_aceitos = recozimento_simulado(
+        inicial, T0=T0, alpha=alpha, max_iteracoes=max_iteracoes
     )
 
     print(f"\nParâmetros:")
     print(f"  Temperatura inicial (T0): {T0}")
     print(f"  Fator de resfriamento (alpha): {alpha}")
     print(f"  Política: T_nova = {alpha} * T_atual (resfriamento geométrico)")
-    print(f"  Máximo de iterações: {max_iter}")
+    print(f"  Máximo de iterações: {max_iteracoes}")
 
-    print(f"\nResultado (partindo de {list(initial)}):")
-    print(f"  Estado final: {list(final_state)}, h = {final_h}")
-    print(f"  Passos realizados: {steps}")
+    print(f"\nResultado (partindo de {list(inicial)}):")
+    print(f"  Estado final: {list(final_estado)}, h = {h_final}")
+    print(f"  Passos realizados: {passos}")
 
     print(f"\nExemplos de movimentos piores aceitos:")
-    print(f"{'Passo':<8} {'h_antes':<9} {'h_depois':<10} {'ΔE':<6} {'T':<10} {'P(aceitar)'}")
+    print(f"{'Passo':<8} {'h_antes':<9} {'h_depois':<10} {'delta_E':<6} {'T':<10} {'P(aceitar)'}")
     print("-" * 55)
-    for wa in worse_accepted:
-        print(f"{wa['step']:<8} {wa['from_h']:<9} {wa['to_h']:<10} {wa['delta_E']:<6} {wa['T']:<10} {wa['P']}")
+    for pa in piores_aceitos:
+        print(f"{pa['passo']:<8} {pa['de_h']:<9} {pa['para_h']:<10} {pa['delta_E']:<6} {pa['T']:<10} {pa['P']}")
 
     # Múltiplas execuções para contar soluções
     print(f"\nComparação (20 execuções com estados iniciais aleatórios):")
-    sa_results = run_sa_multiple(num_runs=20, T0=T0, alpha=alpha, max_iter=max_iter)
-    rr_results = random_restart_hill_climbing(num_restarts=20)
+    sa_resultados = executar_rs_multiplas(num_execucoes=20, T0=T0, alpha=alpha, max_iteracoes=max_iteracoes)
+    rr_resultados = hill_climbing_reinicio_aleatorio(num_reinicios=20)
 
-    sa_solutions = sum(1 for r in sa_results if r["found"])
-    rr_solutions = sum(1 for r in rr_results if r["found"])
-    sa_avg_steps = sum(r["steps"] for r in sa_results) / len(sa_results)
-    rr_avg_steps = sum(r["steps"] for r in rr_results) / len(rr_results)
+    sa_solucoes = sum(1 for r in sa_resultados if r["encontrado"])
+    rr_solucoes = sum(1 for r in rr_resultados if r["encontrado"])
+    sa_avg_passos = sum(r["passos"] for r in sa_resultados) / len(sa_resultados)
+    rr_avg_passos = sum(r["passos"] for r in rr_resultados) / len(rr_resultados)
 
     print(f"\n  {'Algoritmo':<30} {'Soluções':<12} {'Média passos'}")
     print(f"  {'-'*55}")
-    print(f"  {'Hill-Climbing (RR)':<30} {rr_solutions}/20      {rr_avg_steps:.1f}")
-    print(f"  {'Simulated Annealing':<30} {sa_solutions}/20      {sa_avg_steps:.1f}")
+    print(f"  {'Hill-Climbing (RR)':<30} {rr_solucoes}/20      {rr_avg_passos:.1f}")
+    print(f"  {'Simulated Annealing':<30} {sa_solucoes}/20      {sa_avg_passos:.1f}")
 
-    print(f"\nQuantidade de soluções válidas (SA, 20 exec.): {sa_solutions}")
+    print(f"\nQuantidade de soluções válidas (SA, 20 exec.): {sa_solucoes}")
 
 
-def print_comparison():
-    print_separator()
+def imprimir_comparacao():
+    imprimir_separador()
     print("COMPARAÇÃO DOS ALGORITMOS")
-    print_separator()
+    imprimir_separador()
 
     # Coleta dados
-    rr_results = random_restart_hill_climbing(num_restarts=20)
-    sa_results = run_sa_multiple(num_runs=20)
+    rr_resultados = hill_climbing_reinicio_aleatorio(num_reinicios=20)
+    sa_resultados = executar_rs_multiplas(num_execucoes=20)
 
-    rr_sols = sum(1 for r in rr_results if r["found"])
-    sa_sols = sum(1 for r in sa_results if r["found"])
-    rr_avg_h = sum(r["final_h"] for r in rr_results) / len(rr_results)
-    sa_avg_h = sum(r["final_h"] for r in sa_results) / len(sa_results)
+    ra_sols = sum(1 for r in rr_resultados if r["encontrado"])
+    rs_sols = sum(1 for r in sa_resultados if r["encontrado"])
+    ra_media_h = sum(r["h_final"] for r in rr_resultados) / len(rr_resultados)
+    rs_media_h = sum(r["h_final"] for r in sa_resultados) / len(sa_resultados)
 
     print(f"\n{'Critério':<35} {'Hill-Climbing (RR)':<22} {'Simulated Annealing'}")
     print("-" * 80)
-    print(f"{'Qualidade (soluções/20)':<35} {rr_sols:<22} {sa_sols}")
-    print(f"{'h médio final':<35} {rr_avg_h:<22.2f} {sa_avg_h:.2f}")
+    print(f"{'Qualidade (soluções/20)':<35} {ra_sols:<22} {rs_sols}")
+    print(f"{'h médio final':<35} {ra_media_h:<22.2f} {rs_media_h:.2f}")
     print(f"{'Escapa máximos locais':<35} {'Não (reinício)':<22} {'Sim (prob.)'}")
     print(f"{'Sensível ao estado inicial':<35} {'Muito':<22} {'Moderado'}")
     print(f"{'Estabilidade':<35} {'Moderada':<22} {'Variável (T)'}")
@@ -384,10 +384,10 @@ def print_comparison():
 # ============================================================
 
 if __name__ == "__main__":
-    print_hill_climbing_manual()
+    imprimir_hill_climbing_manual()
     print("\n\n")
-    print_random_restart()
+    imprimir_reinicio_aleatorio()
     print("\n\n")
-    print_simulated_annealing()
+    print_recozimento_simulado()
     print("\n\n")
-    print_comparison()
+    imprimir_comparacao()
