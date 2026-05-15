@@ -2,7 +2,6 @@ import time
 import tracemalloc
 from copy import deepcopy
 
-
 # DEFINIÇÃO DO PROBLEMA CSP
 TURNOS = ['T1', 'T2', 'T3', 'T4', 'T5', 'T6']
 MEDICOS = ['A', 'B', 'C', 'D']
@@ -28,7 +27,6 @@ def verifica_consistente(atribuicao, variavel, valor):
         prox = TURNOS[indice + 1]
         if prox in atribuicao and atribuicao[prox] == valor:
             return False
-    
     # Restrição unária: A não pode trabalhar em T3
     if variavel == 'T3' and valor == 'A':
         return False
@@ -45,7 +43,6 @@ def verifica_consistente_completo(atribuicao):
     # C não pode trabalhar simultaneamente em T2 e T5
     if atribuicao.get('T2') == 'C' and atribuicao.get('T5') == 'C':
         return False
-    
     # D pode trabalhar no máximo dois turnos
     contagem_d = sum(1 for t in TURNOS if atribuicao.get(t) == 'D')
     if contagem_d > 2:
@@ -59,7 +56,6 @@ def verifica_restricoes_globais_parcial(atribuicao):
     contagem_d = sum(1 for t in TURNOS if atribuicao.get(t) == 'D')
     if contagem_d > 2:
         return False
-    
     # C não pode trabalhar simultaneamente em T2 e T5
     if atribuicao.get('T2') == 'C' and atribuicao.get('T5') == 'C':
         return False
@@ -78,7 +74,6 @@ def backtracking(atribuicao, dominios):
         if verifica_consistente_completo(atribuicao):
             return atribuicao
         return None
-    
     # Próxima variável não atribuída (ordem fixa)
     variavel = next(t for t in TURNOS if t not in atribuicao)
     
@@ -157,9 +152,7 @@ def backtracking_mrv_grau(atribuicao, dominios):
         if verifica_consistente_completo(atribuicao):
             return atribuicao
         return None
-    
     variavel = seleciona_mrv_grau(atribuicao, dominios)
-    
     for valor in dominios[variavel]:
         mrv_deg_estados += 1
         if verifica_consistente(atribuicao, variavel, valor):
@@ -182,7 +175,6 @@ def checa_adiante(variavel, valor, atribuicao, dominios):
     # Propaga restrições para variáveis não atribuídas.
     podado = {}
     indice = TURNOS.index(variavel)
-    
     # Restrição de não-consecutividade
     vizinhos = []
     if indice > 0:
@@ -202,14 +194,13 @@ def checa_adiante(variavel, valor, atribuicao, dominios):
     
     return dominios, podado
 
-def backtracking_fc(atribuicao, dominios):
+def backtracking_fc(atribuicao, dominios): # back tracking com forward checking
     global fc_estados, fc_retrocessos
     
     if len(atribuicao) == len(TURNOS):
         if verifica_consistente_completo(atribuicao):
             return atribuicao
         return None
-    
     variavel = seleciona_mrv(atribuicao, dominios)
     
     for valor in list(dominios[variavel]):
@@ -218,7 +209,6 @@ def backtracking_fc(atribuicao, dominios):
             atribuicao[variavel] = valor
             copia_dominios = deepcopy(dominios)
             resultado_dominios, podado = checa_adiante(variavel, valor, atribuicao, dominios)
-            
             if resultado_dominios is not None and verifica_restricoes_globais_parcial(atribuicao):
                 resultado = backtracking_fc(atribuicao, dominios)
                 if resultado:
@@ -249,7 +239,6 @@ def backtracking_bj_aux(atribuicao, indice_ordem, conjuntos_conflito):
         if verifica_consistente_completo(atribuicao):
             return atribuicao
         return None
-    
     variavel = TURNOS[indice_ordem]
     dominios = obtem_dominios_iniciais()
     
@@ -294,13 +283,9 @@ def backtracking_backjump(atribuicao, dominios):
         return None
 
 # EXECUÇÃO E COLETA DE RESULTADOS
-
-print("=" * 70)
 print("CSP - ESCALA DE PLANTÕES HOSPITALARES")
-print("=" * 70)
 
 resultados = {}
-
 algoritmos = [
     ("Backtracking Simples", backtracking, False),
     ("Backtracking + MRV", backtracking_mrv, False),
@@ -315,14 +300,7 @@ for nome, algo, _ in algoritmos:
     
     dominios = obtem_dominios_iniciais()
     atribuicao = {}
-    
-    tracemalloc.start()
-    t0 = time.perf_counter()
     solucao = algo(atribuicao, dominios)
-    t1 = time.perf_counter()
-    atual, pico = tracemalloc.get_traced_memory()
-    tracemalloc.stop()
-    
     if nome == "Backtracking Simples":
         estados = bt_estados; retrocessos = bt_retrocessos
     elif nome == "Backtracking + MRV":
@@ -333,27 +311,18 @@ for nome, algo, _ in algoritmos:
         estados = fc_estados; retrocessos = fc_retrocessos
     else:
         estados = bj_estados; retrocessos = bj_saltos
-    
     resultados[nome] = {
         'solution': solucao,
         'estados': estados,
-        'backtracks': retrocessos,
-        'time_ms': (t1 - t0) * 1000,
-        'memory_kb': pico / 1024,
+        'backtracks': retrocessos
     }
-    
-    print(f"\n{'='*50}")
     print(f"Algoritmo: {nome}")
     print(f"Solução: {solucao}")
     print(f"Estados explorados: {estados}")
     print(f"Retrocessos: {retrocessos}")
-    print(f"Tempo: {(t1-t0)*1000:.4f} ms")
-    print(f"Memória pico: {pico/1024:.2f} KB")
 
 # TRACE DO BACKTRACKING SIMPLES (para tabela passo a passo)
-print("\n" + "="*70)
 print("TRACE DETALHADO DO BACKTRACKING SIMPLES")
-print("="*70)
 
 passos_trace = []
 contador_passo = [0]
@@ -363,7 +332,6 @@ def backtracking_trace(atribuicao, dominios):
         if verifica_consistente_completo(atribuicao):
             return atribuicao
         return None
-    
     variavel = next(t for t in TURNOS if t not in atribuicao)
     
     for valor in dominios[variavel]:
@@ -397,7 +365,7 @@ def backtracking_trace(atribuicao, dominios):
                     'step': contador_passo[0],
                     'variavel': variavel,
                     'valor': valor,
-                    'status': 'GLOBAL_CONFLICT',
+                    'status': 'CONFLITO_GLOBAL',
                     'state': copia_estado
                 })
             del atribuicao[variavel]
@@ -406,7 +374,7 @@ def backtracking_trace(atribuicao, dominios):
                 'step': contador_passo[0],
                 'variavel': variavel,
                 'valor': valor,
-                'status': 'CONFLICT',
+                'status': 'CONFLITO',
                 'state': copia_estado
             })
     
@@ -415,16 +383,13 @@ def backtracking_trace(atribuicao, dominios):
 backtracking_trace({}, obtem_dominios_iniciais())
 
 print(f"\n{'Passo':<6} {'Variável':<12} {'Status':<18} Estado Parcial")
-print("-"*80)
 mostrados = []
 for s in passos_trace[:40]:  # Mostrar primeiros 40 passos
     str_estado = "{" + ", ".join(f"{k}={v}" for k,v in s['state'].items()) + "}"
     print(f"{s['step']:<6} {s['variavel']+'='+s['valor']:<12} {s['status']:<18} {str_estado}")
 
 # TRACE DO FORWARD CHECKING (domínios após atribuição)
-print("\n" + "="*70)
 print("TRACE FORWARD CHECKING - Reduções de Domínio")
-print("="*70)
 
 trace_fc = []
 
@@ -441,19 +406,17 @@ def backtracking_fc_trace(atribuicao, dominios, profundidade=0):
             atribuicao[variavel] = valor
             dominios_antes = {k: list(v) for k, v in dominios.items()}
             resultado_dominios, podado = checa_adiante(variavel, valor, atribuicao, dominios)
-            
             trace_fc.append({
                 'atribuicao': dict(atribuicao),
                 'podado': podado,
                 'domains_after': {k: list(v) for k, v in dominios.items()},
-                'inconsistent': resultado_dominios is None
+                'inconsistente': resultado_dominios is None
             })
             
             if resultado_dominios is not None and verifica_restricoes_globais_parcial(atribuicao):
                 resultado = backtracking_fc_trace(atribuicao, dominios, profundidade+1)
                 if resultado:
                     return resultado
-            
             del atribuicao[variavel]
             for vizinho, valores in podado.items():
                 for v in valores:
@@ -468,14 +431,6 @@ print(f"\nPrimeiras atribuições com forward checking:")
 for i, entrada in enumerate(trace_fc[:10]):
     str_atribuicao = ", ".join(f"{k}={v}" for k,v in entrada['atribuicao'].items())
     str_podado = str(entrada['podado']) if entrada['podado'] else "{}"
-    inc = " [INCONSISTENTE]" if entrada['inconsistent'] else ""
+    inc = " [INCONSISTENTE]" if entrada['inconsistente'] else ""
     print(f"  [{i+1}] {{{str_atribuicao}}}")
     print(f"       Podas: {str_podado}{inc}")
-
-print("\n" + "="*70)
-print("TABELA RESUMO DOS ALGORITMOS")
-print("="*70)
-print(f"\n{'Algoritmo':<30} {'Estados':>10} {'Retrocessos':>12} {'Tempo(ms)':>12} {'Mem(KB)':>10}")
-print("-"*78)
-for nome, dados in resultados.items():
-    print(f"{nome:<30} {dados['estados']:>10} {dados['backtracks']:>12} {dados['time_ms']:>12.4f} {dados['memory_kb']:>10.2f}")

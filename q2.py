@@ -80,12 +80,9 @@ def busca_gulosa(grafo, inicio, objetivo, heuristica, rotulo="ORIGINAL"):
     # Busca Gulosa pela Melhor Escolha.
     # f(n) = h(n)
 
-    print(f"\n{'='*60}")
     print(f"GREEDY BEST-FIRST SEARCH - Heuristica: {rotulo}")
-    print(f"{'='*60}")
     print(f"{'Passo':<6} {'Expandido':<10} {'h(n)':<6} "
           f"{'Fronteira (no:h)':<40} {'Caminho parcial'}")
-    print('-' * 90)
 
     # Fronteira: (h(n), contador, no)
     # contador serve como desempate deterministico
@@ -119,7 +116,7 @@ def busca_gulosa(grafo, inicio, objetivo, heuristica, rotulo="ORIGINAL"):
             print(f"{passo:<6} {nodo:<10} {valor_h:<6} {exibicao_fronteira:<40} {caminho_parcial}")
             caminho = reconstruir_caminho(veio_de, nodo)
             custo = custo_caminho(grafo, caminho)
-            print(f"\n--- RESULTADO ---")
+            print(f"\nRESULTADO")
             print(f"Caminho: {' -> '.join(caminho)}")
             print(f"Custo total:       {custo}")
             print(f"Nos gerados:       {len(gerados)}")
@@ -152,12 +149,9 @@ def busca_a_estrela(grafo, inicio, objetivo, heuristica, rotulo="ORIGINAL"):
     # Busca A*.
     # f(n) = g(n) + h(n)
 
-    print(f"\n{'='*60}")
     print(f"A* - Heuristica: {rotulo}")
-    print(f"{'='*60}")
     print(f"{'Passo':<6} {'No':<6} {'g(n)':<6} {'h(n)':<6} {'f(n)':<6} "
           f"{'Fronteira ordenada por f':<45} {'Caminho parcial'}")
-    print('-' * 110)
 
     # Fronteira: (f, g, contador, no)
     contador  = 0
@@ -197,7 +191,7 @@ def busca_a_estrela(grafo, inicio, objetivo, heuristica, rotulo="ORIGINAL"):
         if nodo == objetivo:
             caminho = reconstruir_caminho(veio_de, nodo)
             custo = custo_g[objetivo]
-            print(f"\n--- RESULTADO ---")
+            print(f"\nRESULTADO")
             print(f"Caminho: {' -> '.join(caminho)}")
             print(f"Custo total:       {custo}")
             print(f"Nos gerados:       {len(gerados)}")
@@ -219,133 +213,64 @@ def busca_a_estrela(grafo, inicio, objetivo, heuristica, rotulo="ORIGINAL"):
 
 
 # Tabela resumo comparativa
-
 def imprimir_tabela_comparacao(resultados):
     # resultados: lista de dicts com chaves:
     #   algorithm, heuristica, caminho, custo, gerados, expandidos
 
-    print(f"\n{'='*80}")
     print("TABELA COMPARATIVA")
-    print(f"{'='*80}")
     header = f"{'Algoritmo':<12} {'Heuristica':<12} {'Caminho':<35} {'Custo':<7} {'Gerados':<9} {'Expandidos'}"
     print(header)
-    print('-' * 90)
     for r in resultados:
         path_str = ' -> '.join(r['caminho']) if r['caminho'] else 'N/A'
         print(f"{r['algorithm']:<12} {r['heuristica']:<12} {path_str:<35} "
               f"{r['custo']:<7} {r['gerados']:<9} {r['expandidos']}")
 
+resultados = []
 
-# Analise das questoes
+# --- Heuristica original ---
+g_caminho_o, g_custo_o, g_ger_o, g_exp_o = busca_gulosa(
+    GRAFO, INICIO, OBJETIVO, HEURISTICA_ORIGINAL, "ORIGINAL")
 
-def analisar(res_original, res_modificado):
-    # Imprime a analise das 6 sub-questoes.
-    g_orig, a_orig   = res_original
-    g_mod,  a_mod    = res_modificado
+a_caminho_o, a_custo_o, a_ger_o, a_exp_o = busca_a_estrela(
+    GRAFO, INICIO, OBJETIVO, HEURISTICA_ORIGINAL, "ORIGINAL")
 
-    print(f"\n{'='*60}")
-    print("ANALISE DO IMPACTO DA HEURISTICA")
-    print(f"{'='*60}")
+resultados.append({'algorithm': 'Greedy', 'heuristica': 'Original',
+                'caminho': g_caminho_o, 'custo': g_custo_o,
+                'gerados': g_ger_o, 'expandidos': g_exp_o})
+resultados.append({'algorithm': 'A*', 'heuristica': 'Original',
+                'caminho': a_caminho_o, 'custo': a_custo_o,
+                'gerados': a_ger_o, 'expandidos': a_exp_o})
 
-    # a) Solucao mudou?
-    sol_gulosa_mudou = (g_orig['caminho'] != g_mod['caminho'])
-    sol_astar_mudou  = (a_orig['caminho']  != a_mod['caminho'])
-    print(f"\na) A solucao encontrada mudou?")
-    print(f"   Greedy: {'SIM' if sol_gulosa_mudou else 'NAO'} "
-          f"(orig={g_orig['caminho']}, mod={g_mod['caminho']})")
-    print(f"   A*:     {'SIM' if sol_astar_mudou  else 'NAO'} "
-          f"(orig={a_orig['caminho']}, mod={a_mod['caminho']})")
+# --- Heuristica modificada ---
+print("\n\nNos com heuristica modificada:")
+print("    O: 1 -> 10  |  S: 1 -> 10  |  R: 2 -> 1")
 
-    # b) Custo mudou?
-    custo_gula_mudou = (g_orig['custo'] != g_mod['custo'])
-    cost_astar_mudou  = (a_orig['custo']  != a_mod['custo'])
-    print(f"\nb) O custo da solucao mudou?")
-    print(f"   Greedy: {'SIM' if custo_gula_mudou else 'NAO'} "
-          f"(orig={g_orig['custo']}, mod={g_mod['custo']})")
-    print(f"   A*:     {'SIM' if cost_astar_mudou  else 'NAO'} "
-          f"(orig={a_orig['custo']}, mod={a_mod['custo']})")
+g_caminho_m, g_custo_m, g_ger_m, g_exp_m = busca_gulosa(
+    GRAFO, INICIO, OBJETIVO, HEURISTICA_MODIFICADA, "MODIFICADA")
 
-    # c) Greedy encontrou solucao otima?
-    custo_minimo = min(a_orig['custo'], a_mod['custo'])
-    print(f"\nc) A busca gulosa encontrou solucao otima (orig)?")
-    eh_otima = (g_orig['custo'] == custo_minimo)
-    print(f"   {'SIM' if eh_otima else 'NAO'} - custo greedy={g_orig['custo']}, "
-          f"custo otimo={custo_minimo}")
+a_caminho_m, a_custo_m, a_ger_m, a_exp_m = busca_a_estrela(
+    GRAFO, INICIO, OBJETIVO, HEURISTICA_MODIFICADA, "MODIFICADA")
 
-    # d) A* encontrou solucao otima?
-    print(f"\nd) O A* encontrou solucao otima?")
-    print(f"   Original: SIM (admissivel) - custo={a_orig['custo']}")
-    print(f"   Modificado: custo={a_mod['custo']} "
-          f"(poderia nao ser)")
+resultados.append({'algorithm': 'Greedy', 'heuristica': 'Modificada',
+                'caminho': g_caminho_m, 'custo': g_custo_m,
+                'gerados': g_ger_m, 'expandidos': g_exp_m})
+resultados.append({'algorithm': 'A*', 'heuristica': 'Modificada',
+                'caminho': a_caminho_m, 'custo': a_custo_m,
+                'gerados': a_ger_m, 'expandidos': a_exp_m})
 
-    # e) Qual expandiu menos nos?
-    print(f"\ne) Quem expandiu menos nos?")
-    print(f"   Original  - Greedy: {g_orig['expandidos']}  |  A*: {a_orig['expandidos']}")
-    print(f"   Modificado - Greedy: {g_mod['expandidos']}  |  A*: {a_mod['expandidos']}")
-    vencedor_orig = 'Greedy' if g_orig['expandidos'] <= a_orig['expandidos'] else 'A*'
-    vencedor_mod  = 'Greedy' if g_mod['expandidos']  <= a_mod['expandidos']  else 'A*'
-    print(f"   Vencedor original: {vencedor_orig} | Vencedor modificado: {vencedor_mod}")
+# --- Tabela comparativa ---
+imprimir_tabela_comparacao(resultados)
 
-    # f) Qual foi mais sensivel a heuristica?
-    delta_gulosa = abs(g_orig['custo'] - g_mod['custo'])
-    delta_a_estrela  = abs(a_orig['custo']  - a_mod['custo'])
-    print(f"\nf) Qual foi mais sensivel a heuristica?")
-    print(f"   dtcusto Greedy = {delta_gulosa}  |  dtcusto A* = {delta_a_estrela}")
-    mais_sensivel = 'Greedy' if delta_gulosa >= delta_a_estrela else 'A*'
-    print(f"   Mais sensivel: {mais_sensivel}")
-
-
-# Execucao principal
-
-if __name__ == '__main__':
-
-    resultados = []
-
-    # --- Heuristica original ---
-    g_caminho_o, g_custo_o, g_ger_o, g_exp_o = busca_gulosa(
-        GRAFO, INICIO, OBJETIVO, HEURISTICA_ORIGINAL, "ORIGINAL")
-
-    a_caminho_o, a_custo_o, a_ger_o, a_exp_o = busca_a_estrela(
-        GRAFO, INICIO, OBJETIVO, HEURISTICA_ORIGINAL, "ORIGINAL")
-
-    resultados.append({'algorithm': 'Greedy', 'heuristica': 'Original',
-                    'caminho': g_caminho_o, 'custo': g_custo_o,
-                    'gerados': g_ger_o, 'expandidos': g_exp_o})
-    resultados.append({'algorithm': 'A*', 'heuristica': 'Original',
-                    'caminho': a_caminho_o, 'custo': a_custo_o,
-                    'gerados': a_ger_o, 'expandidos': a_exp_o})
-
-    # --- Heuristica modificada ---
-    print("\n\n>>> Nos com heuristica modificada:")
-    print("    O: 1 -> 10  |  S: 1 -> 10  |  R: 2 -> 1")
-
-    g_caminho_m, g_custo_m, g_ger_m, g_exp_m = busca_gulosa(
-        GRAFO, INICIO, OBJETIVO, HEURISTICA_MODIFICADA, "MODIFICADA")
-
-    a_caminho_m, a_custo_m, a_ger_m, a_exp_m = busca_a_estrela(
-        GRAFO, INICIO, OBJETIVO, HEURISTICA_MODIFICADA, "MODIFICADA")
-
-    resultados.append({'algorithm': 'Greedy', 'heuristica': 'Modificada',
-                    'caminho': g_caminho_m, 'custo': g_custo_m,
-                    'gerados': g_ger_m, 'expandidos': g_exp_m})
-    resultados.append({'algorithm': 'A*', 'heuristica': 'Modificada',
-                    'caminho': a_caminho_m, 'custo': a_custo_m,
-                    'gerados': a_ger_m, 'expandidos': a_exp_m})
-
-    # --- Tabela comparativa ---
-    imprimir_tabela_comparacao(resultados)
-
-    # --- Analise ---
-    res_original = (
-        {'caminho': g_caminho_o, 'custo': g_custo_o,
-         'gerados': g_ger_o, 'expandidos': g_exp_o},
-        {'caminho': a_caminho_o, 'custo': a_custo_o,
-         'gerados': a_ger_o, 'expandidos': a_exp_o},
-    )
-    res_modificado = (
-        {'caminho': g_caminho_m, 'custo': g_custo_m,
-         'gerados': g_ger_m, 'expandidos': g_exp_m},
-        {'caminho': a_caminho_m, 'custo': a_custo_m,
-         'gerados': a_ger_m, 'expandidos': a_exp_m},
-    )
-    analisar(res_original, res_modificado)
+# --- Analise ---
+res_original = (
+    {'caminho': g_caminho_o, 'custo': g_custo_o,
+        'gerados': g_ger_o, 'expandidos': g_exp_o},
+    {'caminho': a_caminho_o, 'custo': a_custo_o,
+        'gerados': a_ger_o, 'expandidos': a_exp_o},
+)
+res_modificado = (
+    {'caminho': g_caminho_m, 'custo': g_custo_m,
+        'gerados': g_ger_m, 'expandidos': g_exp_m},
+    {'caminho': a_caminho_m, 'custo': a_custo_m,
+        'gerados': a_ger_m, 'expandidos': a_exp_m},
+)

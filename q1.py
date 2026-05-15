@@ -52,7 +52,6 @@ NOT_FOUND = object()
 
 
 # UTILITÁRIOS
-
 class Fila:
     def __init__(self, itens=None):
         self._dados = list(itens) if itens is not None else []
@@ -69,10 +68,7 @@ class Fila:
             raise IndexError("fila vazia")
         item = self._dados[self._inicio]
         self._inicio += 1
-        # Compacta ocasionalmente para evitar crescimento sem limite
-        if self._inicio > 32 and self._inicio * 2 > len(self._dados):
-            self._dados = self._dados[self._inicio:]
-            self._inicio = 0
+     
         return item
 
     def como_lista(self):
@@ -83,16 +79,11 @@ def imprimir_tabela(passos):
     col2 = max(len("Nó expandido"),            max(len(str(p[1])) for p in passos))
     col3 = max(len("Fronteira após expansão"), max(len(str(p[2])) for p in passos))
 
-    sep = f"+{'-'*(col1+2)}+{'-'*(col2+2)}+{'-'*(col3+2)}+"
     fmt = f"| {{:<{col1}}} | {{:<{col2}}} | {{:<{col3}}} |"
 
-    print(sep)
     print(fmt.format("Passo", "Nó expandido", "Fronteira após expansão"))
-    print(sep)
     for p in passos:
         print(fmt.format(str(p[0]), str(p[1]), str(p[2])))
-    print(sep)
-
 
 def imprimir_resultado(caminho, nos_gerados, nos_expandidos):
     print(f"  Caminho solução : {' -> '.join(caminho)}")
@@ -101,11 +92,9 @@ def imprimir_resultado(caminho, nos_gerados, nos_expandidos):
     print(f"  Nós gerados     : {nos_gerados}")
     print(f"  Nós expandidos  : {nos_expandidos}")
 
-
 # BFS
 # Teste de objetivo ao GERAR cada filho.
 # Para imediatamente ao encontrar o objetivo - sem expandi-lo.
-
 def bfs(grafo, inicio, objetivo):
     if inicio == objetivo:
         return [inicio], 1, 0, [(1, inicio, [])]
@@ -149,10 +138,8 @@ def bfs(grafo, inicio, objetivo):
 
     return None, nos_gerados, nos_expandidos, passos
 
-
 # DFS RECURSIVA
 # Teste de objetivo ao GERAR cada filho.
-
 def dfs(grafo, inicio, objetivo):
     if inicio == objetivo:
         return [inicio], 1, 0, [(1, inicio, [])]
@@ -188,11 +175,9 @@ def dfs(grafo, inicio, objetivo):
     resultado = _dfs(inicio, [inicio], set())
     return resultado, nos_gerados[0], nos_expand[0], passos
 
-
 # IDS RECURSIVA
 # Mesma lógica da DFS com limite de profundidade.
 # Ao encontrar o objetivo como filho: retorna sem expandi-lo.
-
 def ids(grafo, inicio, objetivo):
     if inicio == objetivo:
         return [inicio], 1, 0, [], 0
@@ -206,7 +191,6 @@ def ids(grafo, inicio, objetivo):
         contadores['expandidos'] += 1
 
         prof_atual = len(caminho) - 1
-
         if prof_atual < limite:
             fronteira = [v for v in grafo[no] if v not in visitados]
         else:
@@ -228,13 +212,10 @@ def ids(grafo, inicio, objetivo):
                 # Teste de objetivo ao gerar - retorna sem expandir S
                 if vizinho == objetivo:
                     return caminho + [vizinho]
-
                 sub = _dls(vizinho, caminho + [vizinho], visitados,
                            limite, passos_iter, contadores)
-
                 if sub is not CUTOFF and sub is not NOT_FOUND:
                     return sub
-
                 if sub is CUTOFF:
                     resultado_final = CUTOFF
 
@@ -248,49 +229,34 @@ def ids(grafo, inicio, objetivo):
 
         resultado = _dls(inicio, [inicio], visitados, limite,
                          passos_iter, contadores)
-
         total_gerados += contadores['gerados']
         total_expand  += contadores['expandidos']
         todas_passos.append((limite, passos_iter))
 
         if resultado is not CUTOFF and resultado is not NOT_FOUND:
             return resultado, total_gerados, total_expand, todas_passos, limite
-
         if resultado is NOT_FOUND:
             return None, total_gerados, total_expand, todas_passos, limite
 
         limite += 1
 
-
 # EXECUÇÃO E EXIBIÇÃO
-
 def executar_e_exibir(nome_grafo, grafo):
-    sep = "=" * 70
-    print(f"\n{sep}")
     print(f"  GRAFO: {nome_grafo}")
-    print(sep)
-
-    print(f"\n{'─'*70}")
     print("  BUSCA EM AMPLITUDE (BFS)")
-    print(f"{'─'*70}")
     caminho, gerados, expandidos, passos = bfs(grafo, INICIO, OBJETIVO)
     print()
     imprimir_tabela(passos)
     print()
     imprimir_resultado(caminho, gerados, expandidos)
-
-    print(f"\n{'─'*70}")
     print("  BUSCA EM PROFUNDIDADE (DFS)")
-    print(f"{'─'*70}")
     caminho, gerados, expandidos, passos = dfs(grafo, INICIO, OBJETIVO)
     print()
     imprimir_tabela(passos)
     print()
     imprimir_resultado(caminho, gerados, expandidos)
 
-    print(f"\n{'─'*70}")
     print("  BUSCA ITERATIVA EM PROFUNDIDADE (IDS)")
-    print(f"{'─'*70}")
     caminho, gerados, expandidos, todas_passos, lim_final = ids(grafo, INICIO, OBJETIVO)
     for (limite, passos_iter) in todas_passos:
         print(f"\n  >> Iteração com limite = {limite}:")
@@ -299,16 +265,11 @@ def executar_e_exibir(nome_grafo, grafo):
     print()
     imprimir_resultado(caminho, gerados, expandidos)
 
-
 def comparar_resultados():
-    sep = "=" * 70
-    print(f"\n{sep}")
     print("  COMPARAÇÃO: GRAFO ORIGINAL vs. GRAFO MODIFICADO")
-    print(sep)
 
     col = 22
     print(f"\n{'Algoritmo':<10} {'Métrica':<22} {'Original':>{col}} {'Modificado':>{col}}")
-    print("-" * 78)
 
     for algo, fn in [("BFS", bfs), ("DFS", dfs), ("IDS", ids)]:
         orig = fn(grafo_original,  INICIO, OBJETIVO)
@@ -325,8 +286,6 @@ def comparar_resultados():
             print(f"{prefixo:<10} {metrica:<22} {v_o:>{col}} {v_m:>{col}}")
         print()
 
-
-if __name__ == "__main__":
-    executar_e_exibir("ORIGINAL", grafo_original)
-    executar_e_exibir("MODIFICADO (C: H,G | H: O,N)", grafo_modificado)
-    comparar_resultados()
+executar_e_exibir("ORIGINAL", grafo_original)
+executar_e_exibir("MODIFICADO (C: H,G | H: O,N)", grafo_modificado)
+comparar_resultados()
